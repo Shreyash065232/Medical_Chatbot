@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Medical AI Assistant</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet"
+        href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet"
+        href="https://use.fontawesome.com/releases/v5.5.0/css/all.css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+</head>
+
+<body>
+
+    <div class="chat-wrapper">
+
+        <div class="chat-card">
+
+            <!-- ================= HEADER ================= -->
+
+            <div class="chat-header">
+
+                <div class="bot-profile">
+
+                    <div class="bot-avatar">
+                        <i class="fas fa-user-md"></i>
+                        <span class="online-dot"></span>
+                    </div>
+
+                    <div class="bot-info">
+                        <h4>Medical AI Assistant</h4>
+                        <span>
+                            <i class="fas fa-circle"></i>
+                            Online • Ready to help
+                        </span>
+                    </div>
+
+                </div>
+
+                <div class="header-icon">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+
+            </div>
+
+
+            <!-- ================= CHAT BODY ================= -->
+
+            <div id="messageFormeight" class="chat-body">
+
+                <!-- Welcome message -->
+
+                <div class="bot-message">
+
+                    <div class="message-avatar">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+
+                    <div class="message-content">
+
+                        <div class="message-bubble">
+
+                            <strong>Hello! 👋</strong>
+
+                            <p>
+                                I'm your Medical AI Assistant.
+                                You can ask me questions about medical conditions,
+                                symptoms, treatments and general health information.
+                            </p>
+
+                        </div>
+
+                        <span class="message-time">
+                            Just now
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================= INPUT AREA ================= -->
+
+            <div class="chat-footer">
+
+                <div class="medical-disclaimer">
+
+                    <i class="fas fa-info-circle"></i>
+
+                    General medical information only.
+                    Please consult a qualified healthcare professional
+                    for diagnosis or treatment.
+
+                </div>
+
+
+                <form id="messageArea" class="message-input-area">
+
+                    <input
+                        type="text"
+                        id="text"
+                        name="msg"
+                        placeholder="Ask a medical question..."
+                        autocomplete="off"
+                        required
+                    >
+
+                    <button
+                        type="submit"
+                        id="send"
+                        title="Send message">
+
+                        <i class="fas fa-paper-plane"></i>
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= JAVASCRIPT ================= -->
+
+    <script>
+
+        $(document).ready(function () {
+
+            $("#messageArea").on("submit", function (event) {
+
+                event.preventDefault();
+
+                const date = new Date();
+
+                const hour = String(date.getHours()).padStart(2, "0");
+                const minute = String(date.getMinutes()).padStart(2, "0");
+
+                const str_time = hour + ":" + minute;
+
+                var rawText = $("#text").val().trim();
+
+                if (!rawText) {
+                    return;
+                }
+
+
+                /* ================= USER MESSAGE ================= */
+
+                var userHtml =
+
+                    '<div class="user-message">' +
+
+                        '<div class="message-content user-content">' +
+
+                            '<div class="message-bubble user-bubble">' +
+
+                                $('<div>').text(rawText).html() +
+
+                            '</div>' +
+
+                            '<span class="message-time">' +
+                                str_time +
+                            '</span>' +
+
+                        '</div>' +
+
+                        '<div class="message-avatar user-avatar">' +
+                            '<i class="fas fa-user"></i>' +
+                        '</div>' +
+
+                    '</div>';
+
+
+                $("#text").val("");
+
+                $("#send").prop("disabled", true);
+
+                $("#messageFormeight").append(userHtml);
+
+
+                /* Scroll to bottom */
+
+                $("#messageFormeight").scrollTop(
+                    $("#messageFormeight")[0].scrollHeight
+                );
+
+
+                /* ================= THINKING ================= */
+
+                var thinkingHtml =
+
+                    '<div id="thinkingMessage" class="bot-message">' +
+
+                        '<div class="message-avatar">' +
+                            '<i class="fas fa-user-md"></i>' +
+                        '</div>' +
+
+                        '<div class="message-content">' +
+
+                            '<div class="message-bubble thinking-bubble">' +
+
+                                '<span class="thinking-text">Thinking</span>' +
+
+                                '<span class="thinking-dots">' +
+                                    '<span></span>' +
+                                    '<span></span>' +
+                                    '<span></span>' +
+                                '</span>' +
+
+                            '</div>' +
+
+                        '</div>' +
+
+                    '</div>';
+
+
+                $("#messageFormeight").append(thinkingHtml);
+
+
+                $("#messageFormeight").scrollTop(
+                    $("#messageFormeight")[0].scrollHeight
+                );
+
+
+                /* ================= SEND TO FLASK ================= */
+
+                $.ajax({
+
+                    data: {
+                        msg: rawText
+                    },
+
+                    type: "POST",
+
+                    url: "/get"
+
+                }).done(function (data) {
+
+
+                    /* Remove thinking */
+
+                    $("#thinkingMessage").remove();
+
+
+                    /* ================= BOT RESPONSE ================= */
+
+                    var botHtml =
+
+                        '<div class="bot-message">' +
+
+                            '<div class="message-avatar">' +
+                                '<i class="fas fa-user-md"></i>' +
+                            '</div>' +
+
+                            '<div class="message-content">' +
+
+                                '<div class="message-bubble">' +
+
+                                    $('<div>').text(data).html() +
+
+                                '</div>' +
+
+                                '<span class="message-time">' +
+                                    str_time +
+                                '</span>' +
+
+                            '</div>' +
+
+                        '</div>';
+
+
+                    $("#messageFormeight").append(botHtml);
+
+
+                    /* Scroll to bottom */
+
+                    $("#messageFormeight").scrollTop(
+                        $("#messageFormeight")[0].scrollHeight
+                    );
+
+
+                }).fail(function () {
+
+
+                    $("#thinkingMessage").remove();
+
+
+                    var errorHtml =
+
+                        '<div class="bot-message">' +
+
+                            '<div class="message-avatar error-avatar">' +
+                                '<i class="fas fa-exclamation"></i>' +
+                            '</div>' +
+
+                            '<div class="message-content">' +
+
+                                '<div class="message-bubble error-bubble">' +
+
+                                    'Sorry, something went wrong. Please try again.' +
+
+                                '</div>' +
+
+                            '</div>' +
+
+                        '</div>';
+
+
+                    $("#messageFormeight").append(errorHtml);
+
+
+                }).always(function () {
+
+                    $("#send").prop("disabled", false);
+
+                    $("#text").focus();
+
+                });
+
+            });
+
+
+            /* ================= ENTER TO SEND ================= */
+
+            $("#text").on("keydown", function (event) {
+
+                if (event.key === "Enter") {
+
+                    event.preventDefault();
+
+                    $("#messageArea").submit();
+
+                }
+
+            });
+
+        });
+
+    </script>
+
+</body>
+
+</html>
